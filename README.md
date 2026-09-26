@@ -12,6 +12,7 @@ change, the source file and the canonical URL. The build also publishes
 [`llms.txt`](https://jagreehal.github.io/cbd-docs-site/llms.txt) and
 [`contracts/docs-manifest.json`](https://jagreehal.github.io/cbd-docs-site/contracts/docs-manifest.json).
 Each publisher's docs check reads the manifest to catch broken cross-repo links.
+[cbd-docs-mcp](https://github.com/jagreehal/cbd-docs-mcp) serves the same docs to Claude as a connector.
 
 This repo owns no documents, and publishers build without it. GitHub Actions
 rebuilds it hourly, on push, and when you run the workflow by hand.
