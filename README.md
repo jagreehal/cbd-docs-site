@@ -3,11 +3,15 @@
 The company docs index: **https://jagreehal.github.io/cbd-docs-site/**
 
 Each build lists the public repositories tagged `cbd-publisher`, clones them,
-and renders their `docs/**/*.md` into one site. Pages show the owner, the last
-git change and backlinks, with a raw `.md` twin and an `llms.txt` index. The
-build also publishes
+and renders their `docs/**/*.md` with Starlight. Pages show the owner, the last
+git change and backlinks, with search across the repositories.
+
+For agents, each page has a Markdown twin at `<url>.md`, linked from the page
+head with `rel="alternate"`. Its frontmatter carries the owner, the last git
+change, the source file and the canonical URL. The build also publishes
+[`llms.txt`](https://jagreehal.github.io/cbd-docs-site/llms.txt) and
 [`contracts/docs-manifest.json`](https://jagreehal.github.io/cbd-docs-site/contracts/docs-manifest.json).
-Each publisher's docs check reads it to catch broken cross-repo links.
+Each publisher's docs check reads the manifest to catch broken cross-repo links.
 
 This repo owns no documents, and publishers build without it. GitHub Actions
 rebuilds it hourly, on push, and when you run the workflow by hand.

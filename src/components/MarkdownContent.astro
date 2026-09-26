@@ -1,0 +1,68 @@
+---
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+import { docMeta } from '../doc-meta.ts';
+import { manifest } from '../manifest.ts';
+
+const id = Astro.locals.starlightRoute.id;
+const meta = docMeta(id);
+const related: string[] = (Astro.locals.starlightRoute.entry.data as { related?: string[] }).related ?? [];
+const linkedFrom = meta?.linkedFrom ?? [];
+const edges = [
+  { heading: 'Related', ids: related },
+  { heading: 'Linked from', ids: linkedFrom },
+].filter((group) => group.ids.length);
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+---
+
+<Default><slot /></Default>
+
+{
+  edges.length > 0 && (
+    <aside class="edges">
+      {edges.map((group) => (
+        <div>
+          <h2>{group.heading}</h2>
+          <ul>
+            {group.ids.map((target) => (
+              <li>
+                <a href={`${base}${target}/`}>{manifest[target]?.title ?? target}</a>
+                <span>{target.split('/')[0]}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </aside>
+  )
+}
+
+<style>
+  .edges {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--sl-color-hairline);
+  }
+  h2 {
+    font-size: var(--sl-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sl-color-gray-3);
+    margin: 0 0 0.5rem;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    padding: 0.2rem 0;
+  }
+  li span {
+    margin-left: 0.4rem;
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-3);
+  }
+</style>

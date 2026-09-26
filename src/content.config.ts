@@ -1,6 +1,8 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { frontmatter, type Frontmatter } from '../read-docs.ts';
+import { z } from 'astro/zod';
+import { docsSchema } from '@astrojs/starlight/schema';
+import { artifact } from '../read-docs.ts';
 
 const docs = defineCollection({
   // One collection, every enrolled repo, cloned into repos/ by `pnpm run repos`.
@@ -10,13 +12,11 @@ const docs = defineCollection({
     // cbd-payments-service/docs/runbook.md -> cbd-payments-service/runbook
     generateId: ({ entry }) => entry.replace('/docs/', '/').replace(/\.md$/, ''),
   }),
-  // z.custom defers to the artifact-derived schema rather than restating it
-  // here. A hand-copied schema in the aggregator would be the stale copy this
-  // whole repo argues against, and it would drift the first time
-  // cbd-handbook changed.
-  schema: z.custom<Frontmatter>((value) => frontmatter.safeParse(value).success, {
-    message: 'frontmatter does not match cbd-handbook/contracts/docs-frontmatter.json',
-  }),
+  // Starlight extends the handbook's artifact with its own optional fields, so
+  // the site restates none of the convention and keeps it strict: an unknown
+  // key still fails the build. Built with Astro's zod, because Starlight's
+  // defaults only apply when both schemas come from the same zod instance.
+  schema: docsSchema({ extend: z.fromJSONSchema(artifact) as z.ZodObject }),
 });
 
 export const collections = { docs };

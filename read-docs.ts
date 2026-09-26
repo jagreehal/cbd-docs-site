@@ -5,20 +5,15 @@
 //   repos/cbd-payments-service/docs/runbook.md    -> cbd-payments-service/runbook
 //   repos/cbd-payments-service/docs/ops/replay.md -> cbd-payments-service/ops/replay
 import { globSync, readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { z } from 'zod';
 
 // The committed artifact from cbd-handbook (itself enrolled), never its Zod
 // source. cbd-reporter reads this same file with jsonschema.
-export const frontmatter = z.fromJSONSchema(
-  JSON.parse(
-    readFileSync(
-      fileURLToPath(new URL('./repos/cbd-handbook/contracts/docs-frontmatter.json', import.meta.url)),
-      'utf8'
-    )
-  )
-);
+// Resolved from the project root: Astro bundles this module for prerendering,
+// which moves import.meta.url away from repos/.
+export const artifact = JSON.parse(readFileSync('repos/cbd-handbook/contracts/docs-frontmatter.json', 'utf8'));
+export const frontmatter = z.fromJSONSchema(artifact);
 
 export type Frontmatter = z.infer<typeof frontmatter>;
 

@@ -11,6 +11,7 @@
 // .md routes are the half with evidence behind them.
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import { docMeta } from '../doc-meta.ts';
 
 export const GET: APIRoute = async ({ site }) => {
   const base = new URL(import.meta.env.BASE_URL, site).href.replace(/\/$/, '');
@@ -20,16 +21,19 @@ export const GET: APIRoute = async ({ site }) => {
   const lines = [
     '# Acme documentation',
     '',
-    '> Every document committed under docs/ in every Acme repository that follows',
-    '> the company convention. Each entry is also available as raw markdown by',
-    '> appending .md to its URL.',
+    '> Documents committed under docs/ in the Acme repositories tagged',
+    '> cbd-publisher. Each link below is the raw markdown; its frontmatter names',
+    '> the owner, the last git change, and the source file on GitHub.',
+    '',
+    `The same index as JSON, with links between documents: ${base}/contracts/docs-manifest.json`,
     '',
   ];
 
   for (const repo of repos) {
     lines.push(`## ${repo}`, '');
     for (const doc of docs.filter((entry) => entry.id.startsWith(`${repo}/`))) {
-      lines.push(`- [${doc.data.title}](${base}/${doc.id}.md): owned by ${doc.data.owner}`);
+      const updated = docMeta(doc.id)?.updated?.slice(0, 10);
+      lines.push(`- [${doc.data.title}](${base}/${doc.id}.md): owned by ${doc.data.owner}${updated ? `, changed ${updated}` : ''}`);
     }
     lines.push('');
   }
