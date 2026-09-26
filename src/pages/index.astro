@@ -1,0 +1,165 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import { manifest } from '../manifest.ts';
+import { day } from '../format.ts';
+
+const docs = (await getCollection('docs')).sort((a, b) => a.id.localeCompare(b.id));
+const repoNames = [...new Set(docs.map((doc) => doc.id.split('/')[0]))];
+const repos = [
+  ...repoNames.filter((repo) => repo === 'cbd-handbook'),
+  ...repoNames.filter((repo) => repo !== 'cbd-handbook').sort(),
+];
+
+const byTag = new Map();
+for (const doc of docs) {
+  for (const tag of doc.data.tags ?? []) {
+    const list = byTag.get(tag) ?? [];
+    list.push(doc);
+    byTag.set(tag, list);
+  }
+}
+const tags = [...byTag.keys()].sort();
+---
+
+<Layout
+  title="Acme docs"
+  description="Operational and technical documentation aggregated from enrolled repositories."
+>
+  <p>
+    {docs.length} documents from {repos.length} repositories. Each team commits
+    Markdown to <code>docs/</code> in its own repository; this index reads the
+    enrolled repositories at build time.
+  </p>
+
+  <section class="start">
+    <h2>Start here · the 02:40 path</h2>
+    <p class="meta">
+      Company incident policy, followed by the engineering runbook it points at:
+      both in git, both on this index.
+    </p>
+    <ol>
+      <li>
+        <a href={`${base}cbd-handbook/incident-communications`}>Incident communications</a>
+        <span class="meta"> · </span>
+        <a href={`${base}cbd-handbook/incident-communications.md`}>.md</a>
+      </li>
+      <li>
+        <a href={`${base}cbd-payments-service/runbook`}>Payments service runbook</a>
+        <span class="meta"> · </span>
+        <a href={`${base}cbd-payments-service/runbook.md`}>.md</a>
+      </li>
+    </ol>
+  </section>
+
+  {
+    repos.map((repo) => (
+      <section>
+        <h2>{repo === 'cbd-handbook' ? 'Company handbook' : repo}</h2>
+        <ul class="docs">
+          {docs
+            .filter((doc) => doc.id.startsWith(`${repo}/`))
+            .map((doc) => {
+              const updated = day(manifest[doc.id]?.updated);
+              return (
+                <li>
+                  <a href={`${base}${doc.id}`}>{doc.data.title}</a>
+                  <div class="meta">
+                    {doc.data.owner}
+                    {updated && <> · updated {updated}</>}
+                    {doc.data.tags?.length ? (
+                      <> · {doc.data.tags.map((tag: string) => <span class="tag">{tag}</span>)}</>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+        </ul>
+      </section>
+    ))
+  }
+
+  {
+    tags.length > 0 && (
+      <section>
+        <h2>By tag</h2>
+        {tags.map((tag) => (
+          <div class="tag-group">
+            <h3><span class="tag">{tag}</span></h3>
+            <ul class="docs">
+              {byTag.get(tag).map((doc) => (
+                <li>
+                  <a href={`${base}${doc.id}`}>{doc.data.title}</a>
+                  <div class="meta">{doc.id.split('/')[0]} · {doc.data.owner}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </section>
+    )
+  }
+</Layout>
+
+<style>
+  h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 2.5rem 0 0.75rem;
+  }
+  .start {
+    margin: 1.75rem 0 0;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+  }
+  .start h2 {
+    margin-top: 0;
+  }
+  .start ol {
+    margin: 0.75rem 0 0;
+    padding-left: 1.25rem;
+  }
+  .start li {
+    padding: 0.25rem 0;
+  }
+  .start a {
+    font-weight: 550;
+    text-decoration: none;
+  }
+  .start a:hover {
+    text-decoration: underline;
+  }
+  ul.docs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--line);
+  }
+  ul.docs li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  ul.docs a {
+    font-weight: 550;
+    text-decoration: none;
+  }
+  ul.docs a:hover {
+    text-decoration: underline;
+  }
+  .tag-group {
+    margin-bottom: 1.25rem;
+  }
+  .tag-group h3 {
+    margin: 0 0 0.35rem;
+    font-size: inherit;
+    font-weight: 400;
+  }
+  .tag-group ul.docs li {
+    padding: 0.4rem 0;
+  }
+</style>
