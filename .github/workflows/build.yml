@@ -2,9 +2,9 @@ name: build
 on:
   push:
     branches: [main]
-  # Publishers do not trigger this; the index catches up on its own schedule.
+  # Hourly, half an hour after cbd-catalog builds, so the manifest copy keeps up.
   schedule:
-    - cron: '17 * * * *'
+    - cron: '47 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,21 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      # Every public repo tagged cbd-publisher, cloned with history for git dates.
-      - run: pnpm run repos
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - run: pnpm run manifest
-      - run: pnpm run build
+      # GitHub Pages serves 404.html for any path it does not have, so every
+      # old page redirects to the same path on cbd-catalog.
+      - run: cp public/index.html public/404.html
+      # A redirect page cannot stand in for JSON. Docs checks pinned to
+      # cbd-handbook v1.0.0 still read the manifest here, so keep a copy.
+      - run: >-
+          curl -fsS --create-dirs -o public/contracts/docs-manifest.json
+          https://jagreehal.github.io/cbd-catalog/contracts/docs-manifest.json
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: public
 
   deploy:
     needs: build
