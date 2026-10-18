@@ -1,7 +1,4 @@
-node_modules/
-dist/
-.astro/
-# cloned and generated on every build
-repos/
+# fetched on every build
 public/contracts/
+public/404.html
 .DS_Store
